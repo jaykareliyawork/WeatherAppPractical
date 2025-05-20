@@ -11,13 +11,17 @@ struct WeatherView: View {
     
     @StateObject private var viewModel = WeatherViewModel()
     @State private var navigate = false
+    @State private var isDarkMode = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 TextField("Enter city name", text: $viewModel.cityName)
                     .padding(10)
-                    .background(Color(UIColor.white))
+                    .foregroundColor(.primary)
+                    .background(
+                        isDarkMode ? Color(.systemGray5) : Color.white
+                    )
                     .cornerRadius(8)
                     .padding(.horizontal, 20)
                     .padding(.top)
@@ -44,7 +48,7 @@ struct WeatherView: View {
                         HStack {
                             Text("Temperature:")
                             Spacer()
-                            if let temp = viewModel.weather?.main.temp {
+                            if let temp = viewModel.weather?.main?.temp {
                                 Text(String(format: "%.1f", temp) + "°C")
                             } else {
                                 Text("--")
@@ -53,21 +57,23 @@ struct WeatherView: View {
                         HStack {
                             Text("Condition:")
                             Spacer()
-                            Text("\(viewModel.weather?.weather.first?.weatherDescription ?? "--")")
+                            Text("\(viewModel.weather?.weather?.first?.weatherDescription ?? "--")")
                         }
                         HStack {
                             Text("Humidity:")
                             Spacer()
-                            if let temp = viewModel.weather?.main.humidity {
-                                Text(String(temp) + "%")
-                            } else {
-                                Text("--")
-                            }
+                            TextField("Humidity", text: Binding(
+                                get: { viewModel.humidity ?? "--" },
+                                set: { viewModel.humidity = $0 }
+                            ))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
                         }
                         HStack {
                             Text("Latitude:")
                             Spacer()
-                            if let temp = viewModel.weather?.coord.lat {
+                            if let temp = viewModel.weather?.coord?.lat {
                                 Text(String(format: "%.4f", temp))
                             } else {
                                 Text("--")
@@ -76,7 +82,7 @@ struct WeatherView: View {
                         HStack {
                             Text("Longitude:")
                             Spacer()
-                            if let temp = viewModel.weather?.coord.lon {
+                            if let temp = viewModel.weather?.coord?.lon {
                                 Text(String(format: "%.4f", temp))
                             } else {
                                 Text("--")
@@ -85,7 +91,7 @@ struct WeatherView: View {
                         HStack {
                             Text("Country:")
                             Spacer()
-                            Text("\(viewModel.weather?.sys.country ?? "--")")
+                            Text("\(viewModel.weather?.sys?.country ?? "--")")
                         }
                     }
                 }
@@ -95,10 +101,16 @@ struct WeatherView: View {
                 
                 if viewModel.isLoading {
                     ProgressView("Loading...")
+                        .frame(width: 100, height: 50)
                 }
                 
-                Spacer().frame(height: 40)
+                Spacer().frame(height: 10)
                 
+                VStack {
+                    Toggle("Dark Mode", isOn: $isDarkMode)
+                        .padding(.horizontal, 30)
+                }
+                                
                 if !viewModel.cityName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Button(action: {
                         navigate = true
@@ -113,11 +125,10 @@ struct WeatherView: View {
                     .padding(.horizontal, 20)
                     .buttonStyle(PlainButtonStyle())
                     .transition(.opacity)
-                }
-                
-                NavigationLink(destination: WeatherDetailsView(viewModel: viewModel), isActive: $navigate) {
+                    Spacer().frame(height: 10)
                 }
             }
+            .preferredColorScheme(isDarkMode ? .dark : .light)
             .alert("Error", isPresented: Binding<Bool>(
                 get: { viewModel.errorMessage != nil },
                 set: { newValue in
@@ -133,6 +144,13 @@ struct WeatherView: View {
             .navigationTitle("Weather App")
             .navigationBarTitleDisplayMode(.inline)
             .background(Color(UIColor.systemGroupedBackground))
+            .navigationDestination(isPresented: $navigate) {
+                WeatherDetailsView(viewModel: viewModel)
+            }
         }
     }
 }
+
+//#Preview {
+//    WeatherView()
+//}

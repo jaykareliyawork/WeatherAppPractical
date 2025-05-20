@@ -13,6 +13,8 @@ class WeatherViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
+    @Published var humidity: String?
+    
     func fetchWeather() async {
         let trimmedCity = cityName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedCity.isEmpty else {
@@ -27,10 +29,11 @@ class WeatherViewModel: ObservableObject {
             errorMessage = "Invalid URL."
             return
         }
-        
-        isLoading = true
-        errorMessage = nil
-        weather = nil
+        updateUI { [weak self] in
+            self?.isLoading = true
+            self?.errorMessage = nil
+            self?.weather = nil
+        }
         
         var request = URLRequest(url: url)
         request.timeoutInterval = 15
@@ -44,26 +47,41 @@ class WeatherViewModel: ObservableObject {
             }
             
             let decoded = try JSONDecoder().decode(WeatherResponse.self, from: data)
-            self.weather = decoded
-        } catch {
-            self.weather = nil
-            if let urlError = error as? URLError {
-                switch urlError.code {
-                case .timedOut:
-                    self.errorMessage = "Request timed out. Please check your network and try again."
-                case .notConnectedToInternet:
-                    self.errorMessage = "No internet connection."
-                default:
-                    self.errorMessage = "Network error: \(urlError.localizedDescription)"
+            updateUI {
+                self.weather = decoded
+                if let humidity = decoded.main?.humidity {
+                    self.humidity = "\(humidity)%"
                 }
-            } else if error is DecodingError {
-                self.errorMessage = "Received unexpected data from server."
-            } else {
-                self.errorMessage = error.localizedDescription
+            }
+        } catch {
+            updateUI { [weak self] in
+                self?.weather = nil
+                if let urlError = error as? URLError {
+                    switch urlError.code {
+                    case .timedOut:
+                        self?.errorMessage = "Request timed out. Please check your network and try again."
+                    case .notConnectedToInternet:
+                        self?.errorMessage = "No internet connection."
+                    default:
+                        self?.errorMessage = "Network error: \(urlError.localizedDescription)"
+                    }
+                } else if error is DecodingError {
+                    self?.errorMessage = "Received unexpected data from server."
+                } else {
+                    self?.errorMessage = error.localizedDescription
+                }
             }
         }
         
         try? await Task.sleep(for: .milliseconds(500))
-        isLoading = false
+        updateUI { [weak self] in
+            self?.isLoading = false
+        }
+    }
+    
+    private func updateUI(_ changes: @escaping () -> Void) {
+        DispatchQueue.main.async {
+            changes()
+        }
     }
 }

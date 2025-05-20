@@ -8,18 +8,18 @@
 import Foundation
 
 struct WeatherResponse: Codable {
-    let weather: [WeatherModel]
-    let main: MainModel
-    let wind: WindModel
-    let name: String
-    let coord: CoordinationModel
-    let sys: SysModel
+    let weather: [WeatherModel]?
+    let main: MainModel?
+    let wind: WindModel?
+    let name: String?
+    let coord: CoordinationModel?
+    let sys: SysModel?
 }
 
 struct WeatherModel: Codable {
-    let main: String
-    let weatherDescription: String
-    let icon: String
+    let main: String?
+    let weatherDescription: String?
+    let icon: String?
     
     enum CodingKeys: String, CodingKey {
         case main
@@ -29,22 +29,22 @@ struct WeatherModel: Codable {
 }
 
 struct MainModel: Codable {
-    let temp: Double
-    let humidity: Int
-    let pressure: Int
+    let temp: Double?
+    let humidity: Int?
+    let pressure: Int?
 }
 
 struct WindModel: Codable {
-    let speed: Double
+    let speed: Double?
 }
 
 struct CoordinationModel: Codable {
-    let lon: Double
-    let lat: Double
+    let lon: Double?
+    let lat: Double?
 }
 
 struct SysModel: Codable {
-    let country: String
-    let sunrise: Int
-    let sunset: Int
+    let country: String?
+    let sunrise: Int?
+    let sunset: Int?
 }

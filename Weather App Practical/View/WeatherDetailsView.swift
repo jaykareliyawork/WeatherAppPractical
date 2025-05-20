@@ -16,7 +16,7 @@ struct WeatherDetailsView: View {
                 HStack {
                     Text("Pressure (hPa):")
                     Spacer()
-                    if let temp = viewModel.weather?.main.pressure {
+                    if let temp = viewModel.weather?.main?.pressure {
                         Text(String(temp))
                     } else {
                         Text("--")
@@ -26,7 +26,7 @@ struct WeatherDetailsView: View {
                 HStack {
                     Text("Wind Speed (m/s):")
                     Spacer()
-                    if let temp = viewModel.weather?.wind.speed {
+                    if let temp = viewModel.weather?.wind?.speed {
                         Text(String(format: "%.1f", temp))
                     } else {
                         Text("--")
@@ -36,11 +36,13 @@ struct WeatherDetailsView: View {
                 HStack {
                     Text("Humidity:")
                     Spacer()
-                    if let temp = viewModel.weather?.main.humidity {
-                        Text(String(temp) + "%")
-                    } else {
-                        Text("--")
-                    }
+                    TextField("Humidity", text: Binding(
+                        get: { viewModel.humidity ?? "--" },
+                        set: { viewModel.humidity = $0 }
+                    ))
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 80)
                 }
             }
         }
